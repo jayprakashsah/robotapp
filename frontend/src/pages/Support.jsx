@@ -9,7 +9,7 @@ import {
   Send, Bot, X, User, Loader2, AlertTriangle, ThumbsUp, ThumbsDown
 } from "lucide-react";
 
-import { WEB_API } from '../services/api'; // NEW: Import web API
+import { WEB_API } from '../services/api';
 
 // EmailJS Configuration (Fallback option)
 const EMAILJS_CONFIG = {
@@ -100,7 +100,7 @@ const SUPPORT_TOPICS = [
   }
 ];
 
-// AI Assistant responses (we'll simulate API calls)
+// AI Assistant responses
 const AI_RESPONSES = {
   greetings: [
     "Hello! I'm your SuperEmo Assistant. How can I help you today?",
@@ -168,7 +168,6 @@ export default function Support() {
   useEffect(() => {
     if (activeChatTopic) {
       setChatOpen(true);
-      // Add welcome message if chat is empty
       if (chatMessages.length === 0) {
         const welcomeMsg = AI_RESPONSES.greetings[
           Math.floor(Math.random() * AI_RESPONSES.greetings.length)
@@ -199,7 +198,33 @@ export default function Support() {
     }
   };
 
-  // NEW: Updated handleFormSubmit function
+  // Helper function to map topics to valid categories
+  const getCategoryFromTopic = (topic) => {
+    if (!topic) return 'technical';
+    
+    const lowerTopic = topic.toLowerCase();
+    
+    if (lowerTopic.includes('hardware') || lowerTopic.includes('technical') || lowerTopic.includes('raspberry') || 
+        lowerTopic.includes('network') || lowerTopic.includes('cloud') || lowerTopic.includes('data') ||
+        lowerTopic.includes('security') || lowerTopic.includes('wifi')) {
+      return 'technical';
+    } else if (lowerTopic.includes('billing') || lowerTopic.includes('payment') || lowerTopic.includes('refund')) {
+      return 'billing';
+    } else if (lowerTopic.includes('feature') || lowerTopic.includes('request') || lowerTopic.includes('enhancement')) {
+      return 'feature-request';
+    } else if (lowerTopic.includes('bug') || lowerTopic.includes('error') || lowerTopic.includes('crash')) {
+      return 'bug';
+    } else if (lowerTopic.includes('mobile') || lowerTopic.includes('app') || lowerTopic.includes('android') || 
+               lowerTopic.includes('ios')) {
+      return 'technical'; // Mobile app issues are technical
+    } else if (lowerTopic.includes('ai') || lowerTopic.includes('ml') || lowerTopic.includes('machine learning')) {
+      return 'feature-request'; // AI/ML support is feature-related
+    } else {
+      return 'other';
+    }
+  };
+
+  // Handle form submission
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     setFormStatus({ type: "loading", message: "Sending your request..." });
@@ -208,13 +233,25 @@ export default function Support() {
       const currentUser = localStorage.getItem('user_name');
       const robotIP = localStorage.getItem('robot_ip');
       
+      // Validate required fields
+      if (!contactForm.name || !contactForm.email || !contactForm.topic || !contactForm.message) {
+        setFormStatus({
+          type: "error",
+          message: "Please fill in all required fields."
+        });
+        return;
+      }
+
+      // Get valid category
+      const validCategory = getCategoryFromTopic(contactForm.topic);
+      
       // Send to Node.js backend
       const response = await WEB_API.post('/support', {
         name: contactForm.name,
         email: contactForm.email,
         subject: `Support: ${contactForm.topic}`,
         description: contactForm.message,
-        category: contactForm.topic.toLowerCase().includes('hardware') ? 'technical' : 'general',
+        category: validCategory,
         priority: contactForm.urgency,
         userId: currentUser || 'anonymous',
         robotIP: robotIP || 'not_connected'
@@ -222,7 +259,7 @@ export default function Support() {
 
       setFormStatus({
         type: "success",
-        message: `Support ticket #${response.data.ticketId} created! We'll email you at ${contactForm.email}`
+        message: `✅ Support ticket #${response.data.ticketId} created! We'll email you at ${contactForm.email}`
       });
 
       // Reset form
@@ -241,8 +278,13 @@ export default function Support() {
     } catch (error) {
       console.error("Support ticket creation failed:", error);
       
-      // Fallback to EmailJS if Node backend is down
-      if (error.code === 'ERR_NETWORK') {
+      // Handle specific error messages
+      if (error.response?.data?.error?.includes('category')) {
+        setFormStatus({
+          type: "error",
+          message: "Category validation error. Please select a valid topic."
+        });
+      } else if (error.code === 'ERR_NETWORK') {
         setFormStatus({
           type: "warning",
           message: "Using email fallback. Ticket saved locally."
@@ -300,7 +342,6 @@ export default function Support() {
 
     // Simulate API delay
     setTimeout(() => {
-      // Generate AI response based on keywords
       let response = "";
       const lowerInput = chatInput.toLowerCase();
 
@@ -335,7 +376,6 @@ export default function Support() {
 
   const handleChatRating = (rating) => {
     setChatRating(rating);
-    // Here you would typically send the rating to your backend
     setTimeout(() => {
       const botMessage = {
         type: MESSAGE_TYPE.BOT,
@@ -391,7 +431,7 @@ export default function Support() {
           
           <p className="text-lg md:text-xl text-slate-300 max-w-3xl mx-auto mb-12 leading-relaxed">
             Expert support for your SuperEmo Unit. Complaints are sent directly to our team at{" "}
-            <span className="text-cyan-400 font-mono">emosuppoert@gmail.com</span>
+            <span className="text-cyan-400 font-mono">sahprakash470@gmail.com</span>
           </p>
 
           {/* Quick Stats */}
@@ -541,10 +581,16 @@ export default function Support() {
                     required
                   >
                     <option value="">Select a topic</option>
+                    <option value="Hardware/Technical">Hardware/Technical</option>
+                    <option value="Billing/Payment">Billing/Payment</option>
+                    <option value="Feature Request">Feature Request</option>
+                    <option value="Bug Report">Bug Report</option>
+                    <option value="Other">Other</option>
                     {SUPPORT_TOPICS.map((topic, index) => (
                       <option key={index} value={topic.title}>{topic.title}</option>
                     ))}
                   </select>
+                  <p className="text-xs text-slate-500 mt-1">Select a topic to auto-set category</p>
                 </div>
 
                 <div>

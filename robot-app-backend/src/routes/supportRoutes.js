@@ -21,7 +21,9 @@ router.post('/', async (req, res) => {
       email,
       subject,
       description,
-      category: category || 'technical',
+      category: (category && ['technical', 'billing', 'feature-request', 'bug', 'other'].includes(category)) 
+  ? category 
+  : 'technical',
       priority: priority || 'medium',
       robotIP: robotIP || 'not_connected',
       status: 'open'
