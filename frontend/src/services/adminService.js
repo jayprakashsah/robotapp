@@ -75,6 +75,15 @@ const adminService = {
       throw error;
     }
   },
+  deleteProduct: async (productId) => {
+  try {
+    const response = await WEB_API.delete(`/admin/products/${productId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error deleting product:', error);
+    throw error;
+  }
+},
 
   saveProduct: async (productData) => {
     try {

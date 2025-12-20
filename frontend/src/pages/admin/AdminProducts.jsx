@@ -4,11 +4,10 @@ import {
   Package, Search, Filter, Plus, Edit, Trash2, Eye,
   RefreshCw, TrendingUp, DollarSign, BarChart,
   CheckCircle, XCircle, ChevronDown, MoreVertical,
-  Download, Upload, Tag, Shield, Star
+  Download, Upload, Tag, Shield, Star, Image as ImageIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import adminService from '../../services/adminService';
-import productService from '../../services/productService';
 
 const AdminProducts = () => {
   const [products, setProducts] = useState([]);
@@ -20,6 +19,7 @@ const AdminProducts = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
+  const [imageUrls, setImageUrls] = useState(['', '', '', '']);
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 10,
@@ -34,10 +34,23 @@ const AdminProducts = () => {
     price: 0,
     discountPrice: '',
     stock: 10,
-    description: '',
-    shortDescription: '',
+    description: '', // This will be short description
+    detailedDescription: '', // This will be long description
     features: [{ title: '', description: '' }],
-    specifications: {},
+    specifications: {
+      processor: '',
+      ram: '',
+      storage: '',
+      battery: '',
+      camera: '',
+      sensors: '',
+      connectivity: '',
+      dimensions: '',
+      weight: '',
+      warranty: '1 Year'
+    },
+    images: [],
+    tags: ['Robot', 'AI', 'Smart'],
     isActive: true
   });
 
@@ -75,40 +88,8 @@ const AdminProducts = () => {
       }
     } catch (error) {
       console.error('Error fetching products:', error);
-      // Mock data for demo
-      setProducts([
-        {
-          _id: '1',
-          name: 'SuperEmo Basic',
-          variant: 'Emo',
-          price: 27999,
-          discountPrice: 24999,
-          stock: 15,
-          isActive: true,
-          createdAt: new Date().toISOString()
-        },
-        {
-          _id: '2',
-          name: 'SuperEmo Pro',
-          variant: 'EmoPro',
-          price: 54999,
-          discountPrice: 49999,
-          stock: 8,
-          isActive: true,
-          createdAt: new Date().toISOString()
-        },
-        {
-          _id: '3',
-          name: 'SuperEmo Pro Plus',
-          variant: 'ProPlus',
-          price: 89999,
-          discountPrice: 84999,
-          stock: 5,
-          isActive: true,
-          createdAt: new Date().toISOString()
-        }
-      ]);
-      setPagination({ page: 1, limit: 10, total: 3, pages: 1 });
+      setProducts([]);
+      setPagination({ page: 1, limit: 10, total: 0, pages: 1 });
     } finally {
       setLoading(false);
     }
@@ -116,16 +97,49 @@ const AdminProducts = () => {
 
   const handleSaveProduct = async () => {
     try {
-      const response = await adminService.saveProduct(newProduct);
+      // Validate required fields
+      if (!newProduct.name || !newProduct.price || newProduct.price <= 0) {
+        alert('Please fill in all required fields (Name and Price)');
+        return;
+      }
+
+      // Prepare data for backend - map frontend fields to backend fields
+      const productData = {
+        ...newProduct,
+        // Map description fields correctly
+        description: newProduct.description, // Short description
+        detailedDescription: newProduct.detailedDescription, // Long description
+        // Ensure numbers are numbers
+        price: Number(newProduct.price),
+        discountPrice: newProduct.discountPrice ? Number(newProduct.discountPrice) : undefined,
+        stock: Number(newProduct.stock),
+        // Process images from URLs
+        images: imageUrls
+          .filter(url => url.trim() !== '')
+          .map((url, index) => ({
+            url: url.trim(),
+            alt: `${newProduct.name} - Image ${index + 1}`,
+            isPrimary: index === 0
+          })),
+        // Process features - remove empty ones
+        features: newProduct.features.filter(f => f.title.trim() !== '' && f.description.trim() !== '')
+      };
+
+      // Remove _id if it's empty (for new products)
+      if (!productData._id) {
+        delete productData._id;
+      }
+
+      const response = await adminService.saveProduct(productData);
       if (response.success) {
-        alert('Product saved successfully!');
+        alert(newProduct._id ? '✅ Product updated successfully!' : '✅ Product created successfully!');
         setShowAddModal(false);
         resetNewProductForm();
         fetchProducts();
       }
     } catch (error) {
       console.error('Error saving product:', error);
-      alert('Failed to save product');
+      alert('❌ Failed to save product: ' + (error.response?.data?.message || error.message));
     }
   };
 
@@ -133,10 +147,12 @@ const AdminProducts = () => {
     try {
       const response = await adminService.toggleProductStatus(productId, !currentStatus);
       if (response.success) {
+        alert(`Product ${!currentStatus ? 'activated' : 'deactivated'} successfully!`);
         fetchProducts();
       }
     } catch (error) {
       console.error('Error toggling product status:', error);
+      alert('Failed to update product status');
     }
   };
 
@@ -144,15 +160,18 @@ const AdminProducts = () => {
     if (!productToDelete) return;
     
     try {
-      // In production, you'd call adminService.deleteProduct
-      console.log('Deleting product:', productToDelete);
-      alert(`Product ${productToDelete.name} would be deleted in production`);
-      setShowDeleteModal(false);
-      setProductToDelete(null);
-      fetchProducts();
+      // Call actual API
+      const response = await adminService.deleteProduct(productToDelete._id);
+      
+      if (response.success) {
+        alert(`✅ Product "${productToDelete.name}" deleted successfully!`);
+        setShowDeleteModal(false);
+        setProductToDelete(null);
+        fetchProducts(); // Refresh the list
+      }
     } catch (error) {
       console.error('Error deleting product:', error);
-      alert('Failed to delete product');
+      alert('❌ Failed to delete product: ' + (error.response?.data?.message || error.message));
     }
   };
 
@@ -164,11 +183,25 @@ const AdminProducts = () => {
       discountPrice: '',
       stock: 10,
       description: '',
-      shortDescription: '',
+      detailedDescription: '',
       features: [{ title: '', description: '' }],
-      specifications: {},
+      specifications: {
+        processor: '',
+        ram: '',
+        storage: '',
+        battery: '',
+        camera: '',
+        sensors: '',
+        connectivity: '',
+        dimensions: '',
+        weight: '',
+        warranty: '1 Year'
+      },
+      images: [],
+      tags: ['Robot', 'AI', 'Smart'],
       isActive: true
     });
+    setImageUrls(['', '', '', '']);
   };
 
   const formatCurrency = (amount) => {
@@ -188,6 +221,45 @@ const AdminProducts = () => {
     }
   };
 
+  // Load product data for editing
+  const loadProductForEdit = (product) => {
+    setNewProduct({
+      ...product,
+      description: product.description || '', // Map from backend
+      detailedDescription: product.detailedDescription || '', // Map from backend
+      features: product.features?.length > 0 ? product.features : [{ title: '', description: '' }],
+      specifications: product.specifications || {
+        processor: '',
+        ram: '',
+        storage: '',
+        battery: '',
+        camera: '',
+        sensors: '',
+        connectivity: '',
+        dimensions: '',
+        weight: '',
+        warranty: '1 Year'
+      },
+      tags: product.tags || ['Robot', 'AI', 'Smart']
+    });
+    
+    // Load images
+    if (product.images?.length > 0) {
+      const urls = product.images.map(img => img.url);
+      setImageUrls([...urls, ...Array(4 - urls.length).fill('')]);
+    } else {
+      setImageUrls(['', '', '', '']);
+    }
+    
+    setShowAddModal(true);
+  };
+
+  const handleImageUrlChange = (index, value) => {
+    const newImageUrls = [...imageUrls];
+    newImageUrls[index] = value;
+    setImageUrls(newImageUrls);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -197,9 +269,12 @@ const AdminProducts = () => {
           <p className="text-gray-600">Manage your product catalog and inventory</p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2">
-            <Download size={16} />
-            Export
+          <button 
+            onClick={fetchProducts}
+            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2"
+          >
+            <RefreshCw size={16} />
+            Refresh
           </button>
           <button 
             onClick={() => setShowAddModal(true)}
@@ -225,9 +300,9 @@ const AdminProducts = () => {
         <div className="bg-white p-4 rounded-xl border border-gray-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Low Stock (10)</p>
+              <p className="text-sm text-gray-600">Low Stock (&lt;10)</p>
               <p className="text-2xl font-bold text-yellow-600">
-                {products.filter(p => p.stock < 10).length}
+                {products.filter(p => p.stock < 10 && p.stock > 0).length}
               </p>
             </div>
             <TrendingUp className="h-8 w-8 text-yellow-500" />
@@ -292,13 +367,6 @@ const AdminProducts = () => {
                 <option key={option.value} value={option.value}>{option.label}</option>
               ))}
             </select>
-            <button
-              onClick={fetchProducts}
-              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center gap-2"
-            >
-              <RefreshCw size={16} />
-              Refresh
-            </button>
           </div>
         </div>
       </div>
@@ -352,11 +420,19 @@ const AdminProducts = () => {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 bg-gradient-to-br from-blue-100 to-cyan-100 rounded-lg flex items-center justify-center">
-                          <Package className="h-5 w-5 text-blue-600" />
+                          {product.images?.length > 0 ? (
+                            <img 
+                              src={product.images[0].url} 
+                              alt={product.name}
+                              className="h-8 w-8 rounded object-cover"
+                            />
+                          ) : (
+                            <Package className="h-5 w-5 text-blue-600" />
+                          )}
                         </div>
                         <div>
                           <p className="font-medium text-gray-900">{product.name}</p>
-                          <p className="text-sm text-gray-500">ID: {product._id.slice(-6)}</p>
+                          <p className="text-sm text-gray-500">ID: {product._id?.slice(-6) || 'N/A'}</p>
                         </div>
                       </div>
                     </td>
@@ -368,7 +444,7 @@ const AdminProducts = () => {
                     <td className="px-6 py-4">
                       <div>
                         <p className="font-medium">{formatCurrency(product.discountPrice || product.price)}</p>
-                        {product.discountPrice && (
+                        {product.discountPrice && product.discountPrice < product.price && (
                           <p className="text-sm text-gray-500 line-through">
                             {formatCurrency(product.price)}
                           </p>
@@ -407,15 +483,14 @@ const AdminProducts = () => {
                         <button
                           onClick={() => setSelectedProduct(selectedProduct?._id === product._id ? null : product)}
                           className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
+                          title="View Details"
                         >
                           <Eye size={16} />
                         </button>
                         <button
-                          onClick={() => {
-                            setNewProduct({ ...product, _id: product._id });
-                            setShowAddModal(true);
-                          }}
+                          onClick={() => loadProductForEdit(product)}
                           className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg"
+                          title="Edit Product"
                         >
                           <Edit size={16} />
                         </button>
@@ -426,6 +501,7 @@ const AdminProducts = () => {
                               ? 'text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50'
                               : 'text-green-600 hover:text-green-700 hover:bg-green-50'
                           }`}
+                          title={product.isActive ? 'Deactivate' : 'Activate'}
                         >
                           {product.isActive ? <Shield size={16} /> : <CheckCircle size={16} />}
                         </button>
@@ -435,6 +511,7 @@ const AdminProducts = () => {
                             setShowDeleteModal(true);
                           }}
                           className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg"
+                          title="Delete Product"
                         >
                           <Trash2 size={16} />
                         </button>
@@ -460,7 +537,7 @@ const AdminProducts = () => {
                 <button
                   onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
                   disabled={pagination.page === 1}
-                  className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                 >
                   Previous
                 </button>
@@ -483,7 +560,7 @@ const AdminProducts = () => {
                 <button
                   onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
                   disabled={pagination.page === pagination.pages}
-                  className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                 >
                   Next
                 </button>
@@ -501,26 +578,27 @@ const AdminProducts = () => {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+              className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
             >
               <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-bold">
-                    {newProduct._id ? 'Edit Product' : 'Add New Product'}
+                    {newProduct._id ? '✏️ Edit Product' : '➕ Add New Product'}
                   </h2>
                   <button
                     onClick={() => {
                       setShowAddModal(false);
                       resetNewProductForm();
                     }}
-                    className="p-2 hover:bg-gray-100 rounded-lg"
+                    className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-gray-700"
                   >
                     ✕
                   </button>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-6">
+                  {/* Basic Information */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Product Name *
@@ -529,8 +607,9 @@ const AdminProducts = () => {
                         type="text"
                         value={newProduct.name}
                         onChange={(e) => setNewProduct({...newProduct, name: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         placeholder="SuperEmo Basic"
+                        required
                       />
                     </div>
                     <div>
@@ -540,7 +619,7 @@ const AdminProducts = () => {
                       <select
                         value={newProduct.variant}
                         onChange={(e) => setNewProduct({...newProduct, variant: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       >
                         {variants.filter(v => v !== 'All').map(variant => (
                           <option key={variant} value={variant}>{variant}</option>
@@ -549,7 +628,8 @@ const AdminProducts = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  {/* Pricing */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Price (₹) *
@@ -558,8 +638,10 @@ const AdminProducts = () => {
                         type="number"
                         value={newProduct.price}
                         onChange={(e) => setNewProduct({...newProduct, price: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         placeholder="27999"
+                        min="0"
+                        required
                       />
                     </div>
                     <div>
@@ -570,13 +652,15 @@ const AdminProducts = () => {
                         type="number"
                         value={newProduct.discountPrice}
                         onChange={(e) => setNewProduct({...newProduct, discountPrice: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         placeholder="24999"
+                        min="0"
                       />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  {/* Stock & Status */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Stock Quantity *
@@ -585,8 +669,10 @@ const AdminProducts = () => {
                         type="number"
                         value={newProduct.stock}
                         onChange={(e) => setNewProduct({...newProduct, stock: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         placeholder="10"
+                        min="0"
+                        required
                       />
                     </div>
                     <div>
@@ -596,7 +682,7 @@ const AdminProducts = () => {
                       <select
                         value={newProduct.isActive}
                         onChange={(e) => setNewProduct({...newProduct, isActive: e.target.value === 'true'})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       >
                         <option value="true">Active</option>
                         <option value="false">Inactive</option>
@@ -604,64 +690,100 @@ const AdminProducts = () => {
                     </div>
                   </div>
 
+                  {/* Image URLs */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <ImageIcon size={16} className="inline mr-1" />
+                      Image URLs (up to 4)
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {imageUrls.map((url, index) => (
+                        <div key={index} className="space-y-1">
+                          <label className="text-xs text-gray-500">Image {index + 1}</label>
+                          <input
+                            type="url"
+                            value={url}
+                            onChange={(e) => handleImageUrlChange(index, e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                            placeholder={`https://example.com/image${index + 1}.jpg`}
+                          />
+                          {url && (
+                            <div className="text-xs text-green-600">
+                              ✓ URL added
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Descriptions */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Description
+                      Short Description *
                     </label>
                     <textarea
                       value={newProduct.description}
                       onChange={(e) => setNewProduct({...newProduct, description: e.target.value})}
-                      rows="3"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                      placeholder="Detailed product description..."
+                      rows="2"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Brief description for product cards (max 150 characters)"
+                      maxLength="150"
+                      required
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Short Description
+                      Detailed Description *
                     </label>
-                    <input
-                      type="text"
-                      value={newProduct.shortDescription}
-                      onChange={(e) => setNewProduct({...newProduct, shortDescription: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                      placeholder="Brief description for product cards"
+                    <textarea
+                      value={newProduct.detailedDescription}
+                      onChange={(e) => setNewProduct({...newProduct, detailedDescription: e.target.value})}
+                      rows="4"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Detailed product description with features, benefits, etc."
+                      required
                     />
                   </div>
 
+                  {/* Features */}
                   <div className="pt-4 border-t border-gray-200">
                     <h3 className="text-lg font-medium mb-3">Features</h3>
                     {newProduct.features.map((feature, index) => (
-                      <div key={index} className="flex gap-2 mb-2">
-                        <input
-                          type="text"
-                          value={feature.title}
-                          onChange={(e) => {
-                            const newFeatures = [...newProduct.features];
-                            newFeatures[index].title = e.target.value;
-                            setNewProduct({...newProduct, features: newFeatures});
-                          }}
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
-                          placeholder="Feature title"
-                        />
-                        <input
-                          type="text"
-                          value={feature.description}
-                          onChange={(e) => {
-                            const newFeatures = [...newProduct.features];
-                            newFeatures[index].description = e.target.value;
-                            setNewProduct({...newProduct, features: newFeatures});
-                          }}
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
-                          placeholder="Feature description"
-                        />
+                      <div key={index} className="flex gap-2 mb-3">
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            value={feature.title}
+                            onChange={(e) => {
+                              const newFeatures = [...newProduct.features];
+                              newFeatures[index].title = e.target.value;
+                              setNewProduct({...newProduct, features: newFeatures});
+                            }}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                            placeholder="Feature title"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            value={feature.description}
+                            onChange={(e) => {
+                              const newFeatures = [...newProduct.features];
+                              newFeatures[index].description = e.target.value;
+                              setNewProduct({...newProduct, features: newFeatures});
+                            }}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                            placeholder="Feature description"
+                          />
+                        </div>
                         <button
                           onClick={() => {
                             const newFeatures = newProduct.features.filter((_, i) => i !== index);
                             setNewProduct({...newProduct, features: newFeatures});
                           }}
-                          className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg"
+                          className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg text-sm"
                         >
                           Remove
                         </button>
@@ -672,10 +794,69 @@ const AdminProducts = () => {
                         ...newProduct,
                         features: [...newProduct.features, { title: '', description: '' }]
                       })}
-                      className="mt-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg"
+                      className="mt-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm"
                     >
-                      Add Feature
+                      + Add Feature
                     </button>
+                  </div>
+
+                  {/* Specifications */}
+                  <div className="pt-4 border-t border-gray-200">
+                    <h3 className="text-lg font-medium mb-3">Specifications</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm text-gray-600 mb-1">Processor</label>
+                        <input
+                          type="text"
+                          value={newProduct.specifications.processor}
+                          onChange={(e) => setNewProduct({
+                            ...newProduct,
+                            specifications: { ...newProduct.specifications, processor: e.target.value }
+                          })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                          placeholder="Intel Core i5"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm text-gray-600 mb-1">RAM</label>
+                        <input
+                          type="text"
+                          value={newProduct.specifications.ram}
+                          onChange={(e) => setNewProduct({
+                            ...newProduct,
+                            specifications: { ...newProduct.specifications, ram: e.target.value }
+                          })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                          placeholder="8GB DDR4"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm text-gray-600 mb-1">Storage</label>
+                        <input
+                          type="text"
+                          value={newProduct.specifications.storage}
+                          onChange={(e) => setNewProduct({
+                            ...newProduct,
+                            specifications: { ...newProduct.specifications, storage: e.target.value }
+                          })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                          placeholder="256GB SSD"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm text-gray-600 mb-1">Battery</label>
+                        <input
+                          type="text"
+                          value={newProduct.specifications.battery}
+                          onChange={(e) => setNewProduct({
+                            ...newProduct,
+                            specifications: { ...newProduct.specifications, battery: e.target.value }
+                          })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                          placeholder="5000mAh"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -685,13 +866,13 @@ const AdminProducts = () => {
                       setShowAddModal(false);
                       resetNewProductForm();
                     }}
-                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleSaveProduct}
-                    className="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg hover:from-blue-700 hover:to-cyan-700"
+                    className="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg hover:from-blue-700 hover:to-cyan-700 transition-colors font-medium"
                   >
                     {newProduct._id ? 'Update Product' : 'Create Product'}
                   </button>
@@ -719,8 +900,11 @@ const AdminProducts = () => {
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
                   Delete Product
                 </h3>
-                <p className="text-gray-600 mb-6">
-                  Are you sure you want to delete <span className="font-semibold">{productToDelete.name}</span>? This action cannot be undone.
+                <p className="text-gray-600 mb-4">
+                  Are you sure you want to delete <span className="font-semibold">{productToDelete.name}</span>?
+                </p>
+                <p className="text-sm text-red-600 mb-6">
+                  ⚠️ This action cannot be undone and will permanently remove the product.
                 </p>
                 <div className="flex justify-center gap-3">
                   <button
@@ -728,13 +912,13 @@ const AdminProducts = () => {
                       setShowDeleteModal(false);
                       setProductToDelete(null);
                     }}
-                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleDeleteProduct}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                   >
                     Delete Product
                   </button>

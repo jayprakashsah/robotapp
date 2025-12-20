@@ -417,6 +417,33 @@ router.get('/activities', async (req, res) => {
                 time: order.createdAt
             });
         });
+
+
+        // ✅ DELETE PRODUCT (Hard delete - Admin only)
+router.delete('/products/:id', async (req, res) => {
+    try {
+        const product = await Product.findByIdAndDelete(req.params.id);
+        
+        if (!product) {
+            return res.status(404).json({
+                success: false,
+                message: 'Product not found'
+            });
+        }
+        
+        res.json({
+            success: true,
+            message: 'Product deleted permanently'
+        });
+        
+    } catch (error) {
+        console.error('Error deleting product:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error deleting product'
+        });
+    }
+});
         
         // Get recent users
         const recentUsers = await User.find()
