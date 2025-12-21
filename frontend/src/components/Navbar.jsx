@@ -82,6 +82,9 @@ export default function Navbar() {
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
+
+
+    
     const handleLogout = () => {
         // Clear all auth data
         localStorage.removeItem('auth_token');
