@@ -13,6 +13,7 @@ const adminRoutes = require('./src/routes/adminRoutes');
 
 
 
+
 const app = express();
 const PORT = process.env.PORT || 5001;
 
@@ -29,6 +30,7 @@ app.use('/api/community', communityRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/admin', adminRoutes);
+
 
 
 
@@ -72,7 +74,7 @@ const startServer = async () => {
 
   // Routes
   app.use('/api/feedback', feedbackRoutes);
-  app.use('/api/support', supportRoutes);
+app.use('/api/support', supportRoutes); // ✅ No parentheses!
   app.use('/api/auth', authRoutes);
 
   // Health endpoints
