@@ -16,8 +16,11 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AdminUsers from "./pages/admin/AdminUsers";
-
-
+import OrdersAdmin from './pages/admin/Orders'; // Renamed to avoid conflict
+import ProductsAdmin from './pages/admin/Products'; // Renamed to avoid conflict
+import SupportTickets from './pages/admin/SupportTickets';
+import Analytics from './pages/admin/Analytics';
+import Settings from './pages/admin/Settings';
 
 const AdminRoute = ({ children }) => {
   const [isAdmin, setIsAdmin] = useState(null);
@@ -87,7 +90,6 @@ const AdminRoute = ({ children }) => {
   
   return isAdmin ? children : <Navigate to="/dashboard" replace />;
 };
-
 
 // Auth verification utility
 const verifyToken = async () => {
@@ -299,19 +301,50 @@ function App() {
           </PublicRoute>
         } />
 
-<Route path="/admin" element={
-  <AdminRoute>
-    <AdminLayout />
-  </AdminRoute>
-}>
-  <Route index element={<AdminDashboard />} />
-  <Route path="orders" element={<AdminOrders />} />
-  <Route path="products" element={<AdminProducts />} />
-  <Route path="users" element={<AdminUsers />} />
-  <Route path="*" element={<Navigate to="/admin" replace />} />
-</Route>
+        {/* Admin Routes - Using AdminLayout for old routes */}
+        <Route path="/admin" element={
+          <AdminRoute>
+            <AdminLayout />
+          </AdminRoute>
+        }>
+          <Route index element={<AdminDashboard />} />
+          <Route path="orders" element={<AdminOrders />} />
+          <Route path="products" element={<AdminProducts />} />
+          <Route path="users" element={<AdminUsers />} />
+          <Route path="*" element={<Navigate to="/admin" replace />} />
+        </Route>
 
-
+        {/* New Admin Routes - Separate routes for new admin pages */}
+        <Route path="/admin/dashboard" element={
+          <AdminRoute>
+            <AdminDashboard />
+          </AdminRoute>
+        } />
+        <Route path="/admin/orders-new" element={
+          <AdminRoute>
+            <OrdersAdmin />
+          </AdminRoute>
+        } />
+        <Route path="/admin/products-new" element={
+          <AdminRoute>
+            <ProductsAdmin />
+          </AdminRoute>
+        } />
+        <Route path="/admin/support" element={
+          <AdminRoute>
+            <SupportTickets />
+          </AdminRoute>
+        } />
+        <Route path="/admin/analytics" element={
+          <AdminRoute>
+            <Analytics />
+          </AdminRoute>
+        } />
+        <Route path="/admin/settings" element={
+          <AdminRoute>
+            <Settings />
+          </AdminRoute>
+        } />
         
         {/* Protected Routes */}
         <Route path="/dashboard" element={
@@ -325,17 +358,18 @@ function App() {
             <Support />
           </ProtectedRoute>
         } />
+        
         <Route path="/my-orders" element={
-  <ProtectedRoute>
-    <MyOrders />
-  </ProtectedRoute>
-} />
+          <ProtectedRoute>
+            <MyOrders />
+          </ProtectedRoute>
+        } />
 
-       <Route path="/order/:productId?" element={
-  <ProtectedRoute>
-    <OrderForm />
-  </ProtectedRoute>
-} />
+        <Route path="/order/:productId?" element={
+          <ProtectedRoute>
+            <OrderForm />
+          </ProtectedRoute>
+        } />
         
         <Route path="/setup" element={
           <ProtectedRoute>
@@ -344,22 +378,23 @@ function App() {
         } />
 
         <Route path="/feedback" element={
-  <ProtectedRoute>
-    <Feedback />
-  </ProtectedRoute>
-} />
-<Route path="/community" element={
-  <ProtectedRoute>
-    <FeedbackCommunity />
-  </ProtectedRoute>
-} />
-<Route path="/products" element={
-  <ProtectedRoute>
-    <Products />
-  </ProtectedRoute>
-} />
-
+          <ProtectedRoute>
+            <Feedback />
+          </ProtectedRoute>
+        } />
         
+        <Route path="/community" element={
+          <ProtectedRoute>
+            <FeedbackCommunity />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/products" element={
+          <ProtectedRoute>
+            <Products />
+          </ProtectedRoute>
+        } />
+
         {/* Catch All */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

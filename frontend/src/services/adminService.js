@@ -55,6 +55,39 @@ const adminService = {
     }
   },
 
+
+
+ getAnalytics: async (params) => {
+    const response = await api.get('/admin/analytics', { params });
+    return response.data;
+  },
+
+  updateOrderStatus: async (orderId, status) => {
+    const response = await api.put(`/admin/orders/${orderId}/status`, { status });
+    return response.data;
+  },
+
+  getProducts: async (params) => {
+    const response = await api.get('/admin/products', { params });
+    return response.data;
+  },
+
+  deleteProduct: async (productId) => {
+    const response = await api.delete(`/admin/products/${productId}`);
+    return response.data;
+  },
+
+  updateTicketStatus: async (ticketId, status) => {
+    const response = await api.put(`/admin/support/tickets/${ticketId}/status`, { status });
+    return response.data;
+  },
+
+
+
+
+
+
+
   updateUser: async (userId, data) => {
     try {
       const response = await WEB_API.patch(`/admin/users/${userId}`, data);
@@ -159,5 +192,7 @@ updateProduct: async (productId, productData) => {
     }
   }
 };
+
+
 
 export default adminService;
