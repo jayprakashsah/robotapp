@@ -75,15 +75,16 @@ const adminService = {
       throw error;
     }
   },
+
   deleteProduct: async (productId) => {
-  try {
-    const response = await WEB_API.delete(`/admin/products/${productId}`);
-    return response.data;
-  } catch (error) {
-    console.error('Error deleting product:', error);
-    throw error;
-  }
-},
+    try {
+      const response = await WEB_API.delete(`/admin/products/${productId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      throw error;
+    }
+  },
 
   saveProduct: async (productData) => {
     try {
@@ -101,6 +102,37 @@ const adminService = {
       return response.data;
     } catch (error) {
       console.error('Error toggling product status:', error);
+      throw error;
+    }
+  },
+
+  // Support Tickets
+  getSupportTickets: async (params = {}) => {
+    try {
+      const response = await WEB_API.get('/admin/support', { params });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching support tickets:', error);
+      throw error;
+    }
+  },
+
+  getTicketDetails: async (ticketId) => {
+    try {
+      const response = await WEB_API.get(`/admin/support/${ticketId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching ticket details:', error);
+      throw error;
+    }
+  },
+
+  updateTicketStatus: async (ticketId, data) => {
+    try {
+      const response = await WEB_API.patch(`/admin/support/${ticketId}/status`, data);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating ticket status:', error);
       throw error;
     }
   },

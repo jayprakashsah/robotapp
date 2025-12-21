@@ -10,6 +10,10 @@ const router = express.Router();
 // Apply admin middleware to all routes
 router.use(authenticate);
 router.use(adminMiddleware);
+// In adminRoutes.js
+router.get('/support', async (req, res) => { /* get all tickets */ });
+router.patch('/support/:id/status', async (req, res) => { /* update status */ });
+
 
 // ✅ ADMIN DASHBOARD STATS
 router.get('/dashboard/stats', async (req, res) => {
