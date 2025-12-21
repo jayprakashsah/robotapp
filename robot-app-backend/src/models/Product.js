@@ -81,10 +81,10 @@ const productSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Description is required']
   },
-  detailedDescription: {
-    type: String,
-    required: [true, 'Detailed description is required']
-  },
+ detailedDescription: {
+  type: String,
+  default: ''
+},
   features: [featureSchema],
   specifications: specificationsSchema,
   price: {

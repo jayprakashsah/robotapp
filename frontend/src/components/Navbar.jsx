@@ -24,6 +24,7 @@ export default function Navbar() {
     const [notificationCount, setNotificationCount] = useState(3);
     const [isScrolled, setIsScrolled] = useState(false);
     const [isAdminUser, setIsAdminUser] = useState(false);
+    
 
     const userDropdownRef = useRef(null);
     const feedbackModalRef = useRef(null);

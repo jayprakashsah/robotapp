@@ -95,53 +95,106 @@ const AdminProducts = () => {
     }
   };
 
-  const handleSaveProduct = async () => {
-    try {
-      // Validate required fields
-      if (!newProduct.name || !newProduct.price || newProduct.price <= 0) {
-        alert('Please fill in all required fields (Name and Price)');
-        return;
-      }
-
-      // Prepare data for backend - map frontend fields to backend fields
-      const productData = {
-        ...newProduct,
-        // Map description fields correctly
-        description: newProduct.description, // Short description
-        detailedDescription: newProduct.detailedDescription, // Long description
-        // Ensure numbers are numbers
-        price: Number(newProduct.price),
-        discountPrice: newProduct.discountPrice ? Number(newProduct.discountPrice) : undefined,
-        stock: Number(newProduct.stock),
-        // Process images from URLs
-        images: imageUrls
-          .filter(url => url.trim() !== '')
-          .map((url, index) => ({
-            url: url.trim(),
-            alt: `${newProduct.name} - Image ${index + 1}`,
-            isPrimary: index === 0
-          })),
-        // Process features - remove empty ones
-        features: newProduct.features.filter(f => f.title.trim() !== '' && f.description.trim() !== '')
-      };
-
-      // Remove _id if it's empty (for new products)
-      if (!productData._id) {
-        delete productData._id;
-      }
-
-      const response = await adminService.saveProduct(productData);
-      if (response.success) {
-        alert(newProduct._id ? '✅ Product updated successfully!' : '✅ Product created successfully!');
-        setShowAddModal(false);
-        resetNewProductForm();
-        fetchProducts();
-      }
-    } catch (error) {
-      console.error('Error saving product:', error);
-      alert('❌ Failed to save product: ' + (error.response?.data?.message || error.message));
+ const handleSaveProduct = async () => {
+  try {
+    // Validate required fields
+    if (!newProduct.name || !newProduct.price || newProduct.price <= 0) {
+      alert('Please fill in all required fields (Name and Price)');
+      return;
     }
-  };
+
+    // Check if detailedDescription is provided
+    if (!newProduct.detailedDescription || newProduct.detailedDescription.trim() === '') {
+      alert('Please provide a detailed description for the product');
+      return;
+    }
+
+    console.log('🛒 Product data before sending:', newProduct);
+
+    // Prepare data for backend - map frontend fields to backend fields
+    const productData = {
+      name: newProduct.name,
+      variant: newProduct.variant,
+      price: Number(newProduct.price),
+      stock: Number(newProduct.stock),
+      isActive: newProduct.isActive,
+      description: newProduct.description.trim(), // Short description
+      detailedDescription: newProduct.detailedDescription.trim(), // Long description (REQUIRED)
+      // Optional fields
+      discountPrice: newProduct.discountPrice ? Number(newProduct.discountPrice) : undefined,
+      tags: newProduct.tags || [],
+      // Process features
+      features: newProduct.features
+        .filter(f => f.title.trim() !== '' && f.description.trim() !== '')
+        .map(f => ({
+          title: f.title.trim(),
+          description: f.description.trim(),
+          icon: 'star' // Default icon
+        })),
+      // Process specifications
+      specifications: {
+        processor: newProduct.specifications.processor || '',
+        ram: newProduct.specifications.ram || '',
+        storage: newProduct.specifications.storage || '',
+        battery: newProduct.specifications.battery || '',
+        camera: newProduct.specifications.camera || '',
+        sensors: newProduct.specifications.sensors || '',
+        connectivity: newProduct.specifications.connectivity || '',
+        dimensions: newProduct.specifications.dimensions || '',
+        weight: newProduct.specifications.weight || '',
+        warranty: newProduct.specifications.warranty || '1 Year'
+      },
+      // Process images from URLs
+      images: imageUrls
+        .filter(url => url.trim() !== '')
+        .map((url, index) => ({
+          url: url.trim(),
+          alt: `${newProduct.name} - Image ${index + 1}`,
+          isPrimary: index === 0
+        }))
+    };
+
+    console.log('📦 Sending product data to backend:', productData);
+
+    // FIXED LINES - Replace the if-else block with this:
+    let response;
+    if (newProduct._id) {
+      console.log(`🔄 Updating existing product: ${newProduct._id}`);
+      // Use the updateProduct method
+      response = await adminService.updateProduct(newProduct._id, productData);
+    } else {
+      console.log('🆕 Creating new product');
+      response = await adminService.saveProduct(productData);
+    }
+    
+    if (response.success) {
+      alert(newProduct._id ? '✅ Product updated successfully!' : '✅ Product created successfully!');
+      setShowAddModal(false);
+      resetNewProductForm();
+      fetchProducts();
+    } else {
+      alert(`❌ Error: ${response.message || 'Unknown error'}`);
+    }
+  } catch (error) {
+    console.error('❌ Error saving product:', error);
+    console.error('Error details:', {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message
+    });
+    
+    // Show user-friendly error message
+    if (error.response?.data?.error?.includes('detailedDescription')) {
+      alert('❌ Product validation failed: Please provide a detailed description.');
+    } else if (error.response?.data?.errors) {
+      const errorMessages = error.response.data.errors.join('\n');
+      alert(`❌ Validation errors:\n${errorMessages}`);
+    } else {
+      alert(`❌ Failed to save product: ${error.userMessage || error.message || 'Unknown error'}`);
+    }
+  }
+};
+
 
   const handleToggleStatus = async (productId, currentStatus) => {
     try {
@@ -223,36 +276,46 @@ const AdminProducts = () => {
 
   // Load product data for editing
   const loadProductForEdit = (product) => {
-    setNewProduct({
-      ...product,
-      description: product.description || '', // Map from backend
-      detailedDescription: product.detailedDescription || '', // Map from backend
-      features: product.features?.length > 0 ? product.features : [{ title: '', description: '' }],
-      specifications: product.specifications || {
-        processor: '',
-        ram: '',
-        storage: '',
-        battery: '',
-        camera: '',
-        sensors: '',
-        connectivity: '',
-        dimensions: '',
-        weight: '',
-        warranty: '1 Year'
-      },
-      tags: product.tags || ['Robot', 'AI', 'Smart']
-    });
-    
-    // Load images
-    if (product.images?.length > 0) {
-      const urls = product.images.map(img => img.url);
-      setImageUrls([...urls, ...Array(4 - urls.length).fill('')]);
-    } else {
-      setImageUrls(['', '', '', '']);
-    }
-    
-    setShowAddModal(true);
-  };
+  console.log('📝 Loading product for edit:', product);
+  
+  setNewProduct({
+    ...product,
+    _id: product._id, // Keep the ID for updates
+    description: product.description || '', // Map from backend
+    detailedDescription: product.detailedDescription || product.description || '', // Map from backend (REQUIRED)
+    features: product.features?.length > 0 ? product.features : [{ title: '', description: '' }],
+    specifications: product.specifications || {
+      processor: '',
+      ram: '',
+      storage: '',
+      battery: '',
+      camera: '',
+      sensors: '',
+      connectivity: '',
+      dimensions: '',
+      weight: '',
+      warranty: '1 Year'
+    },
+    tags: product.tags || ['Robot', 'AI', 'Smart'],
+    // Ensure boolean status
+    isActive: product.isActive !== undefined ? product.isActive : true
+  });
+  
+  console.log('✅ Loaded product data:', {
+    hasDescription: !!product.description,
+    hasDetailedDescription: !!product.detailedDescription
+  });
+  
+  // Load images
+  if (product.images?.length > 0) {
+    const urls = product.images.map(img => img.url);
+    setImageUrls([...urls, ...Array(4 - urls.length).fill('')]);
+  } else {
+    setImageUrls(['', '', '', '']);
+  }
+  
+  setShowAddModal(true);
+};
 
   const handleImageUrlChange = (index, value) => {
     const newImageUrls = [...imageUrls];

@@ -90,6 +90,8 @@ const AdminLayout = () => {
                 );
               })}
             </nav>
+<Link to="/admin/orders">Orders</Link>
+<Link to="/admin/support">Support Tickets</Link>
 
             {/* Quick Stats */}
             <div className="p-4 mt-8 border-t border-gray-700">

@@ -96,6 +96,17 @@ const adminService = {
     }
   },
 
+  // Add this method right after saveProduct in adminService.js
+updateProduct: async (productId, productData) => {
+  try {
+    const response = await WEB_API.put(`/admin/products/${productId}`, productData);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating product:', error);
+    throw error;
+  }
+},
+
   toggleProductStatus: async (productId, isActive) => {
     try {
       const response = await WEB_API.patch(`/admin/products/${productId}/status`, { isActive });
