@@ -372,6 +372,98 @@ export default function Home() {
                 </div>
             </section>
 
+            {/* STEP BY STEP GUIDE SECTION */}
+            <section className="py-24 px-4 sm:px-6 relative overflow-hidden bg-gradient-to-b from-[#050b16] via-[#081226] to-black/50 border-t border-white/5">
+                {/* Background Details */}
+                <div className="absolute inset-0 z-0">
+                   <div className="absolute right-0 bottom-0 h-96 w-96 bg-cyan-700/10 blur-[120px] rounded-full" />
+                   <div className="absolute left-0 top-0 h-96 w-96 bg-purple-700/10 blur-[120px] rounded-full" />
+                </div>
+                
+                <div className="max-w-7xl mx-auto relative z-10">
+                    <motion.div 
+                        initial={{ opacity: 0, y: 40 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        className="text-center mb-16"
+                    >
+                        <span className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-1.5 text-xs font-bold text-cyan-400 uppercase tracking-widest mb-4">
+                            DIY Friendly
+                        </span>
+                        <h2 className="text-4xl md:text-5xl font-bold mb-6">
+                            How to Build Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">SuperEmo</span>
+                        </h2>
+                        <p className="text-slate-400 text-lg max-w-2xl mx-auto">
+                            Follow these simple steps or download the complete source package below to get started.
+                        </p>
+                    </motion.div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {[
+                            {
+                                step: "01",
+                                title: "Hardware Assembly",
+                                description: "Connect Raspberry Pi, camera module, and servos following our detailed schematic.",
+                                icon: <Cpu size={24} className="text-cyan-400" />,
+                                hoverBorder: "hover:border-cyan-500/50",
+                                stepColor: "group-hover:text-cyan-500/10",
+                                iconBg: "bg-cyan-500/10"
+                            },
+                            {
+                                step: "02",
+                                title: "System Setup",
+                                description: "Flash the optimized SuperOS image to your SD card and initialize.",
+                                icon: <Server size={24} className="text-blue-400" />,
+                                hoverBorder: "hover:border-blue-500/50",
+                                stepColor: "group-hover:text-blue-500/10",
+                                iconBg: "bg-blue-500/10"
+                            },
+                            {
+                                step: "03",
+                                title: "Software Install",
+                                description: "Install Python dependencies and apply your cloud API credentials.",
+                                icon: <Code size={24} className="text-purple-400" />,
+                                hoverBorder: "hover:border-purple-500/50",
+                                stepColor: "group-hover:text-purple-500/10",
+                                iconBg: "bg-purple-500/10"
+                            },
+                            {
+                                step: "04",
+                                title: "Calibration",
+                                description: "Run the auto-calibration script to align vision systems and motors.",
+                                icon: <Settings size={24} className="text-green-400" />,
+                                hoverBorder: "hover:border-green-500/50",
+                                stepColor: "group-hover:text-green-500/10",
+                                iconBg: "bg-green-500/10"
+                            }
+                        ].map((item, idx) => (
+                            <motion.div
+                                key={idx}
+                                initial={{ opacity: 0, y: 30 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: idx * 0.15 }}
+                                className="relative group"
+                            >
+                                <div className={`h-full p-8 rounded-3xl bg-white/5 border border-white/10 ${item.hoverBorder} transition-all duration-300 backdrop-blur-sm overflow-hidden`}>
+                                    <div className={`absolute top-0 right-0 p-6 text-6xl font-bold text-white/[0.03] ${item.stepColor} transition-colors`}>
+                                        {item.step}
+                                    </div>
+                                    <div className={`mb-6 p-4 rounded-2xl ${item.iconBg} w-fit`}>
+                                        {item.icon}
+                                    </div>
+                                    <h3 className="text-xl font-bold text-white mb-3 relative z-10">{item.title}</h3>
+                                    <p className="text-slate-400 text-sm leading-relaxed relative z-10">{item.description}</p>
+                                </div>
+                                {idx < 3 && (
+                                    <div className="hidden lg:block absolute top-1/2 -right-4 w-8 h-px bg-gradient-to-r from-white/20 to-transparent transform -translate-y-1/2 z-0" />
+                                )}
+                            </motion.div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
             {/* INTERACTIVE FOOTER */}
             <footer className="relative overflow-hidden bg-gradient-to-t from-black/50 to-transparent border-t border-white/10">
                 {/* Animated Background Elements */}
