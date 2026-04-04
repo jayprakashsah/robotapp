@@ -354,47 +354,7 @@ export default function Login() {
     };
 
     const renderBackendStatus = () => {
-        const getStatusIcon = () => {
-            switch(backendStatus.status) {
-                case 'connected': return <Wifi className="text-green-400" size={16} />;
-                case 'db_error': return <Database className="text-yellow-400" size={16} />;
-                case 'disconnected': return <WifiOff className="text-red-400" size={16} />;
-                default: return <Server className="text-blue-400" size={16} />;
-            }
-        };
-
-        const getStatusColor = () => {
-            switch(backendStatus.status) {
-                case 'connected': return 'bg-green-500/10 border-green-500/20 text-green-400';
-                case 'db_error': return 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400';
-                case 'disconnected': return 'bg-red-500/10 border-red-500/20 text-red-400';
-                default: return 'bg-blue-500/10 border-blue-500/20 text-blue-400';
-            }
-        };
-
-        return (
-            <div className={`mb-4 p-3 rounded-lg border ${getStatusColor()} transition-all`}>
-                <div className="flex items-center gap-2">
-                    {getStatusIcon()}
-                    <span className="text-sm font-medium">{backendStatus.message}</span>
-                </div>
-                
-                {backendStatus.status === 'disconnected' && (
-                    <div className="mt-2 text-xs">
-                        <p className="opacity-80">To start backend:</p>
-                        <code className="block mt-1 p-2 bg-black/30 rounded font-mono text-xs">
-                            cd robot-app-backend && npm run dev
-                        </code>
-                    </div>
-                )}
-                
-                {backendStatus.status === 'db_error' && (
-                    <div className="mt-2 text-xs">
-                        <p className="opacity-80">Check MongoDB Atlas connection in .env file</p>
-                    </div>
-                )}
-            </div>
-        );
+        return null;
     };
 
     const renderLoginForm = () => (
@@ -434,9 +394,9 @@ export default function Login() {
                 {loginLoading ? (
                     <span className="flex items-center justify-center gap-2">
                         <Loader2 size={20} className="animate-spin" /> 
-                        {backendStatus.dbConnected ? "Logging in..." : "Offline Login..."}
+                        Logging in...
                     </span>
-                ) : backendStatus.dbConnected ? "Login with Database" : "Login Offline"}
+                ) : "Login"}
             </button>
         </form>
     );
@@ -503,11 +463,9 @@ export default function Login() {
                 {registerLoading ? (
                     <span className="flex items-center justify-center gap-2">
                         <Loader2 size={20} className="animate-spin" /> 
-                        {backendStatus.dbConnected ? "Creating Account..." : "Saving Offline..."}
+                        Creating Account...
                     </span>
-                ) : registerSuccess ? "Success!" : (
-                    backendStatus.dbConnected ? "Register in Database" : "Register Offline"
-                )}
+                ) : registerSuccess ? "Success!" : "Register"}
             </button>
         </form>
     );
