@@ -201,7 +201,7 @@ export default function Home() {
     };
 
     const handleDownloadSource = () => {
-        alert("Starting download of SuperEmo v2.1 source code...");
+        window.open("https://github.com/jayprakashsah/Tommy_bot.git", "_blank");
     };
 
     return (
@@ -604,7 +604,7 @@ export default function Home() {
                                 <motion.button
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
-                                    onClick={() => navigate("/dashboard")}
+                                    onClick={() => window.open("https://www.linkedin.com/posts/jay-prakash-sah-622659324_robotics-python-raspberrypi-ugcPost-7421553077331189760-cuT0?utm_source=share&utm_medium=member_desktop&rcm=ACoAAFH3XToBGZ9hFQOUwte6HsXCCKKYofp8iLo", "_blank")}
                                     className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600/20 to-purple-500/10 border border-purple-500/30 text-purple-400 font-bold hover:bg-purple-500/20 transition-all flex items-center justify-center gap-2"
                                 >
                                     <Terminal size={18} />
