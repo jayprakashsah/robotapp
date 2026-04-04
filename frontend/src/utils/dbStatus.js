@@ -1,6 +1,6 @@
 export const checkDatabaseStatus = async () => {
   try {
-    const response = await fetch('http://localhost:5001/api/health');
+    const response = await fetch('https://sentient-lab-backend.onrender.com/api/health');
     const data = await response.json();
     
     if (data.database.status === 'connected') {

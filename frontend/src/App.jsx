@@ -50,7 +50,7 @@ const AdminRoute = ({ children }) => {
           console.error('❌ Token decode error:', decodeError);
           
           // Fallback: Check via API
-          const response = await fetch('http://localhost:5001/api/auth/verify', {
+          const response = await fetch('https://sentient-lab-backend.onrender.com/api/auth/verify', {
             headers: {
               'Authorization': `Bearer ${token}`,
               'Accept': 'application/json'
@@ -102,7 +102,7 @@ const verifyToken = async () => {
   
   try {
     console.log('🔍 Verifying token...');
-    const response = await fetch('http://localhost:5001/api/auth/verify', {
+    const response = await fetch('https://sentient-lab-backend.onrender.com/api/auth/verify', {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Accept': 'application/json'
@@ -231,7 +231,7 @@ function App() {
     const checkBackend = async () => {
       try {
         console.log('🔄 Checking backend health...');
-        const response = await fetch('http://localhost:5001/api/health', {
+        const response = await fetch('https://sentient-lab-backend.onrender.com/api/health', {
           method: 'GET',
           headers: {
             'Accept': 'application/json',

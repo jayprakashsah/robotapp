@@ -3,7 +3,7 @@ import axios from 'axios';
 
 // STATIC WEB BACKEND - For Support/Feedback (Always localhost:5001)
 export const WEB_API = axios.create({
-  baseURL: import.meta.env.VITE_WEB_API_URL || 'http://localhost:5001/api',
+  baseURL: import.meta.env.VITE_WEB_API_URL || 'https://sentient-lab-backend.onrender.com/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -222,7 +222,7 @@ export const verifyAuthToken = async () => {
 export const checkBackendHealth = async () => {
   try {
     const response = await axios.get(
-      import.meta.env.VITE_WEB_API_URL?.replace('/api', '') || 'http://localhost:5001/api/health',
+      import.meta.env.VITE_WEB_API_URL?.replace('/api', '') || 'https://sentient-lab-backend.onrender.com/api/health',
       { 
         timeout: 3000,
         headers: {
@@ -241,7 +241,7 @@ export const checkBackendHealth = async () => {
     
     // Try alternative endpoints
     try {
-      const altResponse = await axios.get('http://localhost:5001/', {
+      const altResponse = await axios.get('https://sentient-lab-backend.onrender.com/', {
         timeout: 3000
       });
       

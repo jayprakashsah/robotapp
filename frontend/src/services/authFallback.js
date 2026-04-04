@@ -9,7 +9,7 @@ export const fallbackAuth = {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 3000);
       
-      const response = await fetch('http://localhost:5001/api/health', {
+      const response = await fetch('https://sentient-lab-backend.onrender.com/api/health', {
         method: 'GET',
         signal: controller.signal,
         headers: {
